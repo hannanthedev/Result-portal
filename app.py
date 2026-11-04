@@ -5,6 +5,7 @@ from hmac import compare_digest
 from functools import wraps  # <-- 1. Needed for admin_required decorator
 from werkzeug.utils import secure_filename
 from data import process_results
+import sqlite3
 
 # --- STEP 1: SETUP APP ---
 app = Flask(__name__)  # create your website
@@ -13,6 +14,9 @@ load_dotenv()  # load .env file
 # secret key for session (login system needs this)
 app.secret_key = os.getenv("SECRET_KEY")
 password = os.getenv("PASSWORD")  # admin password from .env
+
+# naming database 
+DATABASE_NAME = 'result_database.db'
 
 # --- STEP 2: UPLOAD FOLDER CONFIG ---
 UPLOAD_FOLDER = "uploads"
@@ -93,22 +97,27 @@ def adminUpload():
             return redirect(url_for('adminDashboard'))
             
     return render_template("admin_upload.html")  # create this html file
-#only for testing
-@app.route("/test-data")
-def testData():
-    path = os.path.join(app.config["UPLOAD_FOLDER"], "results.csv")
-    if not os.path.exists(path):
-        return "File not uploaded yet! Go to /admin/upload"
+
+# #only for testing
+# @app.route("/test-data")
+# def testData():
+#     path = os.path.join(app.config["UPLOAD_FOLDER"], "results.csv")
+#     if not os.path.exists(path):
+#         return "File not uploaded yet! Go to /admin/upload"
     
-    df = process_results(path)
+#     df = process_results(path)
     
-    # This will show data as HTML table on website
-    return f"""
-    <h2>Detected {len(df)} students</h2>
-    <h3>Columns: {df.columns.tolist()}</h3>
-    {df.head(10).to_html()}
-    <br><a href='/admin/upload'>Go back</a>
-    """
+#     # This will show data as HTML table on website
+#     return f"""
+#     <h2>Detected {len(df)} students</h2>
+#     <h3>Columns: {df.columns.tolist()}</h3>
+#     {df.head(10).to_html()}
+#     <br><a href='/admin/upload'>Go back</a>
+#     """
+
+conn = sqlite3.connect(DATABASE_NAME)
+cursor = conn.cursor()
+
     
 
 # --- STEP 7: LOGOUT ROUTE ---
