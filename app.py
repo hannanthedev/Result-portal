@@ -5,7 +5,7 @@ from hmac import compare_digest
 from functools import wraps  # <-- 1. Needed for admin_required decorator
 from werkzeug.utils import secure_filename
 from data import process_results
-import sqlite3
+from save_to_db import save_results_to_db
 
 # --- STEP 1: SETUP APP ---
 app = Flask(__name__)  # create your website
@@ -93,30 +93,24 @@ def adminUpload():
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             
             file.save(filepath)
-            flash(f"File uploaded to {filepath}", "success")
+
+            # ---- NEW: Process with Pandas + Save to Database ----
+            try:
+                # 1. Take data from data.py (your pandas file)
+                df = process_results(filepath)
+                
+                # 2. Store it in sqlite database
+                save_results_to_db(df)
+                
+                flash(f"File uploaded & {len(df)} students saved to database!", "success")
+            except Exception as e:
+                flash(f"File uploaded but database error: {e}", "danger")
+            # ----------------------------------------------------
+
             return redirect(url_for('adminDashboard'))
             
     return render_template("admin_upload.html")  # create this html file
 
-# #only for testing
-# @app.route("/test-data")
-# def testData():
-#     path = os.path.join(app.config["UPLOAD_FOLDER"], "results.csv")
-#     if not os.path.exists(path):
-#         return "File not uploaded yet! Go to /admin/upload"
-    
-#     df = process_results(path)
-    
-#     # This will show data as HTML table on website
-#     return f"""
-#     <h2>Detected {len(df)} students</h2>
-#     <h3>Columns: {df.columns.tolist()}</h3>
-#     {df.head(10).to_html()}
-#     <br><a href='/admin/upload'>Go back</a>
-#     """
-
-conn = sqlite3.connect(DATABASE_NAME)
-cursor = conn.cursor()
 
     
 
