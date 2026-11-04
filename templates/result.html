@@ -3,10 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Result</title>
+    <title>Result - {{ student['name'] }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        .card { background: white; max-width: 500px; margin: 0 auto; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .header { background: #1a1a2e; color: white; padding: 25px; text-align: center; }
+        .header h2 { margin-bottom: 5px; }
+        .header p { opacity: 0.8; font-size: 14px; }
+        .info { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .info-box { background: #f8f9fa; padding: 12px; border-radius: 8px; }
+        .info-box small { color: #666; font-size: 12px; }
+        .info-box b { display: block; font-size: 16px; margin-top: 2px; }
+        .grade-big { grid-column: span 2; text-align: center; background: #e8f5e9; padding: 15px; border-radius: 8px; }
+        .grade-big b { font-size: 28px; color: #2e7d32; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #666; font-size: 13px; }
+        td:last-child { text-align: right; font-weight: 600; }
+        .pass { color: #2e7d32; }
+        .fail { color: #d32f2f; }
+        .back { display: block; text-align: center; margin: 20px; color: #4a90e2; text-decoration: none; }
+        .print-btn { display: block; width: calc(100% - 40px); margin: 0 20px 20px; padding: 12px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+        @media print { .back, .print-btn { display: none; } }
+    </style>
 </head>
 <body>
-    <!-- this page will show result to students  -->
-    <h1>here is roll num</h1>
+    <div class="card">
+        <div class="header">
+            <h2>🎓 {{ student['name'] }}</h2>
+            <p>Roll No: {{ student['roll_no'] }} | Class: {{ student['class'] }}</p>
+        </div>
+
+        <div class="info">
+            <div class="info-box"><small>Father Name</small><b>{{ student['father_name'] }}</b></div>
+            <div class="info-box"><small>Rank</small><b>#{{ student['rank'] }}</b></div>
+            <div class="info-box"><small>Total Marks</small><b>{{ student['total'] }}</b></div>
+            <div class="info-box"><small>Percentage</small><b>{{ student['percentage'] }}%</b></div>
+            <div class="grade-big">
+                <small>GRADE</small><br>
+                <b>{{ student['grade'] }} - {{ student['result'] }}</b>
+            </div>
+        </div>
+
+        <table>
+            <tr><th>SUBJECT</th><th>MARKS</th></tr>
+            {% for r in results %}
+            <tr>
+                <td>{{ r['subject'] }}</td>
+                <td class="{{ 'pass' if r['marks'] >= 40 else 'fail' }}">{{ r['marks'] }} / 100</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <button class="print-btn" onclick="window.print()">🖨️ Print Result</button>
+    </div>
+
+    <a href="/" class="back">← Search Another Roll No</a>
 </body>
 </html>

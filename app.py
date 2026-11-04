@@ -5,7 +5,7 @@ from hmac import compare_digest
 from functools import wraps  # <-- 1. Needed for admin_required decorator
 from werkzeug.utils import secure_filename
 from data import process_results
-from save_to_db import save_results_to_db
+from save_to_db import save_results_to_db , get_db
 
 # --- STEP 1: SETUP APP ---
 app = Flask(__name__)  # create your website
@@ -15,14 +15,11 @@ load_dotenv()  # load .env file
 app.secret_key = os.getenv("SECRET_KEY")
 password = os.getenv("PASSWORD")  # admin password from .env
 
-# naming database 
-DATABASE_NAME = 'result_database.db'
+
 
 # --- STEP 2: UPLOAD FOLDER CONFIG ---
-UPLOAD_FOLDER = "uploads"
+# UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"csv"}
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # create folder if not exists
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB limit
 
 def allowed_file(filename):
@@ -42,9 +39,41 @@ def admin_required(f):
     return decorated_function
 
 # --- STEP 4: PUBLIC ROUTE ---
-@app.route('/', methods=['GET', 'POST'])  # home page /
+@app.route("/")
 def home():
     return render_template("portal.html")
+
+@app.route("/result")
+def showResult():
+    roll = request.args.get("roll")
+
+    if not roll:
+        return render_template("index.html", error="Please enter Roll No")
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # 1. Get student info from students table
+    student = cur.execute(
+        "SELECT * FROM students WHERE roll_no = ?", (roll,)
+    ).fetchone()
+
+    if not student:
+        conn.close()
+        return render_template("notFound.html", roll=roll)
+    # 2. Get subject-wise marks from results + subjects tables
+    results = cur.execute("""
+        SELECT s.name as subject, r.marks 
+        FROM results r
+        JOIN subjects s ON r.subject_id = s.id
+        WHERE r.roll_no = ?
+        ORDER BY s.name
+    """, (roll,)).fetchall()
+
+    conn.close()
+
+    # 3. Send both to HTML page
+    return render_template("result.html", student=student, results=results)
 
 # --- STEP 5: LOGIN ROUTE (PUBLIC) ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -74,42 +103,35 @@ def adminDashboard():
     """Main admin panel page"""
     return render_template("admin.html")
 
-@app.route("/admin/upload", methods=["GET", "POST"])
-@admin_required
-def adminUpload():
-    if request.method == "POST":
-        if 'file' not in request.files:
-            flash("No file selected", "danger")
-            return redirect(request.url)
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash("No file selected", "danger")
-            return redirect(request.url)
-            
-        if file and allowed_file(file.filename):
-            # ALWAYS save as results.csv - so you don't get data.csv error
-            filename = "results.csv"  
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            
-            file.save(filepath)
+@app.route("/admin/upload", methods=["POST"])
+@admin_required 
+def upload():
+    if "file" not in request.files:
+        flash("No file selected", "danger")
+        return redirect(url_for('adminDashboard'))
 
-            # ---- NEW: Process with Pandas + Save to Database ----
-            try:
-                # 1. Take data from data.py (your pandas file)
-                df = process_results(filepath)
-                
-                # 2. Store it in sqlite database
-                save_results_to_db(df)
-                
-                flash(f"File uploaded & {len(df)} students saved to database!", "success")
-            except Exception as e:
-                flash(f"File uploaded but database error: {e}", "danger")
-            # ----------------------------------------------------
+    file = request.files["file"]
 
-            return redirect(url_for('adminDashboard'))
+    if file.filename == "":
+        flash("No file selected", "danger")
+        return redirect(url_for('adminDashboard'))
+
+    if file and allowed_file(file.filename):
+        try:
+            # NO file.save() - NO uploads folder - NO results.csv
+            # Read directly from memory
+            df = process_results(file)  # Pass the file object itself, not file.filename
             
-    return render_template("admin_upload.html")  # create this html file
+            save_results_to_db(df)
+            
+            flash(f"Success! {len(df)} students saved to database!", "success")
+        except Exception as e:
+            flash(f"Database error: {e}", "danger")
+
+        return redirect(url_for('adminDashboard'))
+    
+    flash("Only .csv files allowed", "danger")
+    return redirect(url_for('adminDashboard')) 
 
 
     

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Found</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; width: 90%; max-width: 420px; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; }
+        .emoji { font-size: 60px; margin-bottom: 10px; }
+        h2 { margin-bottom: 8px; color: #d32f2f; }
+        p { color: #666; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .roll-box { background: #fff3e0; padding: 12px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; }
+        .btn { display: block; padding: 13px; background: #4a90e2; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+        .btn:hover { background: #357abd; }
+        .tips { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 13px; margin-top: 20px; line-height: 1.8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="emoji">😢</div>
+        <h2>Result Not Found</h2>
+        <p>No result found in database for this Roll Number.</p>
+
+        <div class="roll-box">
+            Roll No: {{ roll }}
+        </div>
+
+        <a href="/" class="btn">← Try Again</a>
+
+        <div class="tips">
+            <b>Possible reasons:</b><br>
+            • You typed wrong Roll No<br>
+            • Result not uploaded yet<br>
+            • Contact your teacher / admin
+        </div>
+    </div>
+</body>
+</html>

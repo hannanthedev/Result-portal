@@ -1,8 +1,8 @@
 import pandas as pd
-
-def process_results(path):
+def process_results(file_obj):
+    # file_obj can be the uploaded file from Flask, no need to save it
     try:
-        df = pd.read_csv(path)
+        df = pd.read_csv(file_obj)  
     except Exception as e:
         raise ValueError(f"Cannot read CSV file: {e}")
 

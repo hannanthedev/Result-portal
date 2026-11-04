@@ -3,14 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Result Portal</title>
+    <title>Check Result</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; width: 90%; max-width: 420px; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; }
+        h2 { margin-bottom: 5px; }
+        p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        .inputRoll { width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; margin-bottom: 15px; }
+        .inputRoll:focus { border-color: #4a90e2; }
+        button { width: 100%; padding: 14px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        button:hover { background: #357abd; }
+        .error { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+    </style>
 </head>
 <body>
-    <!-- default page where user enters the roll number -->
-    <button><a href="/login">adminLogin</a></button>
-    <h1>Result Portal</h1>
-    <form action="">
-        <input type="number" name="roll" class="inputRoll" placeholder="enter rollnum">
-    </form>
+        <button><a href="/login">adminLogin</a></button>
+    <div class="card">
+        <div style="font-size:50px;">🎓</div>
+        <h2>Check Your Result</h2>
+        <p>Enter your Roll No to see result</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <!-- YOUR FORM - FIXED -->
+        <form action="/result" method="GET">
+            <input type="number" name="roll" class="inputRoll" placeholder="Enter Roll Number" required>
+            <button type="submit">🔍 Search Result</button>
+        </form>
+    </div>
 </body>
 </html>
