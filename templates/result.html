@@ -1,65 +1,124 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {# Jinja auto-escapes {{ }} output, so a name containing < or & is safe here. #}
     <title>Result - {{ student['name'] }}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f0f2f5; padding: 20px; }
-        .card { background: white; max-width: 500px; margin: 0 auto; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { background: #1a1a2e; color: white; padding: 25px; text-align: center; }
-        .header h2 { margin-bottom: 5px; }
-        .header p { opacity: 0.8; font-size: 14px; }
-        .info { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .info-box { background: #f8f9fa; padding: 12px; border-radius: 8px; }
-        .info-box small { color: #666; font-size: 12px; }
-        .info-box b { display: block; font-size: 16px; margin-top: 2px; }
-        .grade-big { grid-column: span 2; text-align: center; background: #e8f5e9; padding: 15px; border-radius: 8px; }
-        .grade-big b { font-size: 28px; color: #2e7d32; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: #666; font-size: 13px; }
-        td:last-child { text-align: right; font-weight: 600; }
-        .pass { color: #2e7d32; }
-        .fail { color: #d32f2f; }
-        .back { display: block; text-align: center; margin: 20px; color: #4a90e2; text-decoration: none; }
-        .print-btn { display: block; width: calc(100% - 40px); margin: 0 20px 20px; padding: 12px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
-        @media print { .back, .print-btn { display: none; } }
-    </style>
+
+    <!-- Favicon: brand mark (same as the portal page) -->
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#0a7a3e">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-    <div class="card">
-        <div class="header">
-            <h2>🎓 {{ student['name'] }}</h2>
-            <p>Roll No: {{ student['roll_no'] }} | Class: {{ student['class'] }}</p>
-        </div>
+<body class="page-result">
 
-        <div class="info">
-            <div class="info-box"><small>Father Name</small><b>{{ student['father_name'] }}</b></div>
-            <div class="info-box"><small>Rank</small><b>#{{ student['rank'] }}</b></div>
-            <div class="info-box"><small>Total Marks</small><b>{{ student['total'] }}</b></div>
-            <div class="info-box"><small>Percentage</small><b>{{ student['percentage'] }}%</b></div>
-            <div class="grade-big">
-                <small>GRADE</small><br>
-                <b>{{ student['grade'] }} - {{ student['result'] }}</b>
+    <!-- ===== Site header: wordmark + link back to the search page ===== -->
+    <header class="site-header">
+        <a class="wordmark" href="/" aria-label="Result Portal home">
+            <img src="{{ url_for('static', filename='img/favicon-32.png') }}" alt="" width="24" height="24">
+            <span>Result Portal</span>
+        </a>
+        <a class="admin-link" href="/">&larr; Search another roll no</a>
+    </header>
+
+    <main class="sheet">
+
+        <!-- ===== 1. Student heading: name, roll number and class ===== -->
+        <section class="student-head">
+            <div class="student-head__text">
+                <p class="eyebrow">02 &mdash; Result</p>
+                <h1>{{ student['name'] }}</h1>
+                <p class="meta">
+                    <span><b>Roll No</b> {{ student['roll_no'] }}</span>
+                    <span><b>Class</b> {{ student['class'] }}</span>
+                </p>
             </div>
+
+            <!-- Decorative brand mark (hidden from screen readers) -->
+            <div class="mark mark--small" aria-hidden="true">
+                <img src="{{ url_for('static', filename='img/brand-mark.png') }}" alt="">
+            </div>
+        </section>
+
+        <!-- ===== 2. Summary: father name, total marks, percentage, grade ===== -->
+        <section class="summary" aria-label="Result summary">
+            <div class="fact fact--wide">
+                <small>Father name</small>
+                <b>{{ student['father_name'] }}</b>
+            </div>
+
+            <div class="fact">
+                <small>Total marks</small>
+                <b>{{ student['total'] }}</b>
+            </div>
+
+            <div class="fact">
+                <small>Percentage</small>
+                <b>{{ student['percentage'] }}%</b>
+            </div>
+
+            {# Grade tile: green for a pass, red for a fail (is_fail is set at the top). #}
+            <div class="fact fact--grade {{ 'is-fail' if is_fail else 'is-pass' }}">
+                <small>Grade</small>
+                <b>{{ student['grade'] }} <span class="sep">&mdash;</span> {{ student['result'] }}</b>
+            </div>
+        </section>
+
+        <!-- ===== 3. Subject-wise marks ===== -->
+        <section class="subjects" aria-labelledby="subjects-title">
+            <h2 id="subjects-title" class="section-title">Subject-wise marks</h2>
+
+            <table class="marks">
+                <thead>
+                    <tr>
+                        <th scope="col">Subject</th>
+                        <th scope="col" class="num">Marks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# One table row per subject in the "results" list. #}
+                    {% for r in results %}
+                    {# A subject is failed when marks are below pass_mark (defined at the top). #}
+                    {% set failed = r['marks'] < pass_mark %}
+                    <tr class="{{ 'is-fail' if failed else 'is-pass' }}">
+                        <td>{{ r['subject'] }}</td>
+                        <td class="num">
+                            {{ r['marks'] }} <span class="of">/ 100</span>
+                            {# Thin bar showing marks out of 100 (capped at 100). A <progress> element is used
+                               so no Jinja is needed inside a style="" attribute. #}
+                            <progress class="marks-bar" value="{{ [r['marks'] | float, 100] | min }}" max="100" aria-hidden="true"></progress>
+                        </td>
+                    </tr>
+                    {% else %}
+                    {# Shown only if the results list is empty. #}
+                    <tr><td colspan="2" class="empty">No subject marks are available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ===== 4. Actions (hidden when printing) ===== -->
+        <div class="actions">
+            {# Print handler lives in static/js/result.js (id="printBtn"). #}
+            <button type="button" class="btn-print" id="printBtn">
+                <span>Print result</span>
+                <span aria-hidden="true">&darr;</span>
+            </button>
         </div>
 
-        <table>
-            <tr><th>SUBJECT</th><th>MARKS</th></tr>
-            {% for r in results %}
-            <tr>
-                <td>{{ r['subject'] }}</td>
-                <td class="{{ 'pass' if r['marks'] >= 40 else 'fail' }}">{{ r['marks'] }} / 100</td>
-            </tr>
-            {% endfor %}
-        </table>
+    </main>
 
-        <br>
-        <button class="print-btn" onclick="window.print()">🖨️ Print Result</button>
-    </div>
+    <!-- ===== Footer ===== -->
+    <footer class="site-footer">
+        <span>Result Portal</span>
+        <span id="year"></span>
+    </footer>
 
-    <a href="/" class="back">← Search Another Roll No</a>
+    <script src="{{ url_for('static', filename='js/result.js') }}"></script>
 </body>
 </html>
