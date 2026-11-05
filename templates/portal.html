@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Check Result</title>
-
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Result Portal">
+    <meta property="og:title" content="Check Your Result">
+    <meta property="og:description" content="Enter your roll number to view your result.">
+    <meta property="og:url" content="{{ request.url_root }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <!-- Favicon: brand mark -->
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}">
@@ -13,6 +21,7 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
 
     <header class="site-header">
@@ -40,15 +49,14 @@
             <h2 id="finder-title" class="visually-hidden">Search by roll number</h2>
 
             {% if error %}
-                <div class="error" role="alert">{{ error }}</div>
+            <div class="error" role="alert">{{ error }}</div>
             {% endif %}
 
             <form id="resultForm" action="/result" method="GET" novalidate>
                 <div class="bar bar--roll">
                     <label for="roll">Roll No</label>
-                    <input type="text" id="roll" name="roll" inputmode="numeric"
-                           pattern="[0-9]*" autocomplete="off" autofocus
-                           placeholder="Enter roll number" required>
+                    <input type="text" id="roll" name="roll" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+                        autofocus placeholder="Enter roll number" required>
                 </div>
 
                 <div class="bar bar--search">
@@ -71,4 +79,5 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>
