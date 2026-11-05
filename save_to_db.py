@@ -14,7 +14,7 @@ def init_db():
     cur = conn.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS students (
         roll_no INTEGER PRIMARY KEY, name TEXT NOT NULL, class INTEGER, father_name TEXT,
-        total INTEGER, percentage REAL, grade TEXT, result TEXT, rank INTEGER)""")
+        total INTEGER, percentage REAL, grade TEXT, result TEXT,  INTEGER)""")
     cur.execute("""CREATE TABLE IF NOT EXISTS subjects (
         id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE)""")
     cur.execute("""CREATE TABLE IF NOT EXISTS results (
@@ -30,7 +30,7 @@ def save_results_to_db(df):
         return
 
     # FIX 2: Exclude computed columns + father_name from subjects
-    NON_SUBJECTS = ['roll_no', 'name', 'class', 'father_name', 'total', 'percentage', 'grade', 'result', 'rank']
+    NON_SUBJECTS = ['roll_no', 'name', 'class', 'father_name', 'total', 'percentage', 'grade', 'result']
     SUBJECTS = [c for c in df.columns if c not in NON_SUBJECTS]
     print(f"Real subjects found: {SUBJECTS}")
 
@@ -47,13 +47,12 @@ def save_results_to_db(df):
         perc = float(row['percentage']) if 'percentage' in df.columns else 0
         grade = str(row['grade']) if 'grade' in df.columns else ""
         result = str(row['result']) if 'result' in df.columns else ""
-        rank = int(float(row['rank'])) if 'rank' in df.columns else 0
-
+       
         # 1. Save student WITH total/percentage/grade
         cur.execute("""INSERT OR REPLACE INTO students 
-            (roll_no, name, class, father_name, total, percentage, grade, result, rank) 
+            (roll_no, name, class, father_name, total, percentage, grade, result) 
             VALUES (?,?,?,?,?,?,?,?,?)""", 
-            (roll_no, name, clas, father, total, perc, grade, result, rank))
+            (roll_no, name, clas, father, total, perc, grade, result))
 
         # 2. Save each subject
         for sub in SUBJECTS:

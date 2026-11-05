@@ -56,7 +56,7 @@ def process_results(file_obj):
     df["percentage"] = (df["total"] / total_marks * 100).round(2)
     df["grade"] = df["percentage"].apply(get_grade)
     df["result"] = df[SUBJECTS].min(axis=1).apply(lambda m: "Pass" if m >= 40 else "Fail")
-    df["rank"] = df["total"].rank(ascending=False, method="min").astype(int)
+
 
     return df
 
