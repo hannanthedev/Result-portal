@@ -1,4 +1,31 @@
+{#
+  ==========================================================================
+  result.html — Student result page
+  ==========================================================================
+  Route:      GET /result?roll=<roll number>   (see the form in index.html)
 
+  Variables the view must pass to render_template('result.html', ...):
+
+    student  (dict / row)  one student record with these keys:
+        name          full name of the student
+        roll_no       roll number
+        class         class / grade the student belongs to
+        father_name   father's name
+        total         total marks obtained
+        percentage    percentage, number only (the "%" sign is added here)
+        grade         letter grade, e.g. "A+"
+        result        overall status text, e.g. "Pass" or "Fail"
+
+    results  (list)        one entry per subject, each with keys:
+        subject       subject name
+        marks         marks obtained out of 100
+
+  Note: the "rank" field is intentionally not displayed on this page.
+
+  Assets:  static/css/style.css  (shared with index.html)
+           static/js/result.js   (print button)
+  ==========================================================================
+#}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +40,7 @@
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <meta name="theme-color" content="#0a7a3e">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/resultStyle.css') }}">
 </head>
 <body class="page-result">
 
@@ -62,7 +89,9 @@
                 <b>{{ student['percentage'] }}%</b>
             </div>
 
-            {# Grade tile: green for a pass, red for a fail (is_fail is set at the top). #}
+            {# The overall result counts as a fail if its text contains "fail" (so "Fail" and "Failed" both work). #}
+            {% set is_fail = 'fail' in (student['result'] | string | lower) %}
+            {# Grade tile: green for a pass, red for a fail. #}
             <div class="fact fact--grade {{ 'is-fail' if is_fail else 'is-pass' }}">
                 <small>Grade</small>
                 <b>{{ student['grade'] }} <span class="sep">&mdash;</span> {{ student['result'] }}</b>
@@ -72,6 +101,9 @@
         <!-- ===== 3. Subject-wise marks ===== -->
         <section class="subjects" aria-labelledby="subjects-title">
             <h2 id="subjects-title" class="section-title">Subject-wise marks</h2>
+
+            {# Pass mark: marks below this value are shown as failed (red). Change it here, in one place. #}
+            {% set pass_mark = 40 %}
 
             <table class="marks">
                 <thead>
@@ -83,7 +115,7 @@
                 <tbody>
                     {# One table row per subject in the "results" list. #}
                     {% for r in results %}
-                    {# A subject is failed when marks are below pass_mark (defined at the top). #}
+                    {# A subject is failed when its marks are below pass_mark (set just above the table). #}
                     {% set failed = r['marks'] < pass_mark %}
                     <tr class="{{ 'is-fail' if failed else 'is-pass' }}">
                         <td>{{ r['subject'] }}</td>
