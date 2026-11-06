@@ -54,9 +54,9 @@ def showResult():  # looks up and shows one student's result
     conn = get_db()  # open the database connection
     cur = conn.cursor()  # cursor is used to run SQL queries
 
-    # 1. Get student info from students table
+    # 1. Get student info from results table
     student = cur.execute(
-        "SELECT * FROM students WHERE roll_no = ?", (roll,)  # "?" safely inserts roll (prevents SQL injection)
+        "SELECT * FROM results WHERE roll_no = ?", (roll,)  # "?" safely inserts roll (prevents SQL injection)
     ).fetchone()  # get just one matching row (or None)
 
     if not student:  # roll number doesn't exist
@@ -125,7 +125,7 @@ def upload():  # validates the CSV and saves it to the database
             
             save_results_to_db(df)  # write all rows into the database
             
-            flash(f"Success! {len(df)} students saved to database!", "success")  # show how many rows saved
+            flash(f"Success! {len(df)} results saved to database!", "success")  # show how many rows saved
         except Exception as e:  # something went wrong
             flash(f"Database error: {e}", "danger")  # show the error message
 
@@ -134,8 +134,87 @@ def upload():  # validates the CSV and saves it to the database
     flash("Only .csv files allowed", "danger")  # wrong file type
     return redirect(url_for('adminDashboard')) 
 
+PASS_MARKS = 33  # Change to 40 if your school uses 40
 
-    
+@app.route('/admin/failed')
+def admin_failed():
+    subject_filter = request.args.get('subject', 'all')
+    search = request.args.get('search', '')
+    class_filter = request.args.get('class', 'all')  # Your DB has class, so filter by class
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # 1. Get all subjects dynamically from YOUR subjects table
+    subjects = cur.execute("SELECT id, name FROM subjects ORDER BY name").fetchall()
+    subjects_list = [r['name'] for r in subjects]
+
+    # 2. Get all classes for filter (e.g. 9, 10)
+    classes = cur.execute("SELECT DISTINCT class FROM students ORDER BY class").fetchall()
+    classes = [r['class'] for r in classes if r['class'] is not None]
+
+    # 3. ONE Query - Join YOUR 3 tables: results + students + subjects
+    # Your link is: results.roll_no = students.roll_no
+    # And: results.subject_id = subjects.id
+    query = """
+        SELECT 
+            s.roll_no, s.name, s.class, s.father_name, s.total, s.percentage, s.grade,
+            sub.name as subject_name,
+            r.marks
+        FROM results r
+        JOIN students s ON r.roll_no = s.roll_no
+        JOIN subjects sub ON r.subject_id = sub.id
+        WHERE r.marks < ?
+    """
+    params = [PASS_MARKS]
+
+    if subject_filter != 'all':
+        query += " AND sub.name = ?"
+        params.append(subject_filter)
+
+    if class_filter != 'all':
+        query += " AND s.class = ?"
+        params.append(int(class_filter))
+
+    if search:
+        query += " AND (s.name LIKE ? OR CAST(s.roll_no AS TEXT) LIKE ?)"
+        params.append(f"%{search}%")
+        params.append(f"%{search}%")
+
+    query += " ORDER BY s.class, s.roll_no, sub.name"
+
+    rows = cur.execute(query, params).fetchall()
+    conn.close()
+
+    # 4. Group by student - So Sara shows ONCE with [English:30, Urdu:25]
+    grouped = {}
+    for r in rows:
+        key = r['roll_no']
+        if key not in grouped:
+            grouped[key] = {
+                'roll_no': r['roll_no'],
+                'name': r['name'],
+                'class': r['class'],
+                'father_name': r['father_name'],
+                'total': r['total'],
+                'percentage': r['percentage'],
+                'failed_subjects': [],
+                'fail_count': 0
+            }
+        grouped[key]['failed_subjects'].append((r['subject_name'], r['marks']))
+        grouped[key]['fail_count'] += 1
+
+    failed_students = list(grouped.values())
+
+    return render_template('failed.html',
+                           students=failed_students,
+                           total_failed=len(failed_students),
+                           subjects=subjects_list,
+                           classes=classes,
+                           selected_subject=subject_filter,
+                           selected_class=class_filter,
+                           search=search,
+                           pass_marks=PASS_MARKS)
 
 # --- STEP 7: LOGOUT ROUTE ---
 @app.route('/logout')  # URL: /logout
