@@ -54,9 +54,11 @@ def showResult():  # looks up and shows one student's result
     conn = get_db()  # open the database connection
     cur = conn.cursor()  # cursor is used to run SQL queries
 
-    # 1. Get student info from results table
+     # 1. Get student info from STUDENTS table (NOT results table)
+    # FIXED: Was "FROM results" - results has no name/father/class/total
+    # students table has: roll_no, name, class, father_name, total, percentage, grade, result
     student = cur.execute(
-        "SELECT * FROM results WHERE roll_no = ?", (roll,)  # "?" safely inserts roll (prevents SQL injection)
+        "SELECT * FROM students WHERE roll_no = ?", (roll,)  # "?" safely inserts roll (prevents SQL injection)
     ).fetchone()  # get just one matching row (or None)
 
     if not student:  # roll number doesn't exist
