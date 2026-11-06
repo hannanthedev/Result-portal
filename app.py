@@ -136,7 +136,7 @@ def upload():  # validates the CSV and saves it to the database
     flash("Only .csv files allowed", "danger")  # wrong file type
     return redirect(url_for('adminDashboard')) 
 
-PASS_MARKS = 33  # Change to 40 if your school uses 40
+PASS_MARKS = 40 # Change to 40 if your school uses 40
 
 @app.route('/admin/failed')
 def admin_failed():
